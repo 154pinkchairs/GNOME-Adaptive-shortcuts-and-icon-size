@@ -24,17 +24,25 @@ echo Please provide the name of the app or apps, separated by spaces, you want t
 read -a '' apps
 for i in $apps
 do
-applist=''
-$(grep -Fi $i ~/.local/share/applications) > $applist 
+declare -a applist
+applist=($i)
+$(grep -Fi $i ~/.local/share/applications) > $applist # need to make it pass full .desktop files names 
+done 
+for j in $applist 
+do
+mkdir -p ~./local/share/applications/additional
+mv $j ~./local/share/applications/additional # move the shortucuts that'd be displayed only with higher res to a temp. dir
 
 hdmi_active=$(xrandr |grep ' connected' |grep 'HDMI' |awk '{print $1}')
 
-if [[ -z "$hdmi_active" ]] || [[ ! -f ~/.local/share/applications/123*]];
+if [[! -z "$hdmi_active" ]] || [[ ! -f ~/.local/share/applications/disabled/*]];
 then
-mv ~/.local/share/applications/123* ~/.local/share/aplications/disabed/
-gsettings (set icon size etc.)
-killall -3 gnome-shell
-elif [-f  ~/.local/share/applications/123*]; # this condition check probably isn't necessary as any potential duplicate shortcuts won't be allowed to be created
+mv ~/.local/share/applications/additional/* ~/.local/share/aplications/disabed/ 
+gsettings (set icon size etc.) #need to remove pseudocode here
+killall -3 gnome-shell # hide the extra shortcuts and restart the DE
+elif [-f  ~/.local/share/applications/additional/*]; # this condition check probably isn't necessary as any potential duplicate shortcuts won't be allowed to be created
 then
 mv ~/.local/share/applications/disabled/* ~/.local/share/applications/
+gsettings (set icon size etc.)
+killall -3 gnome-shell
 fi
