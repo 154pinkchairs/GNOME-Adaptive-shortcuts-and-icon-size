@@ -20,8 +20,16 @@
 #  
 
 
+#! /bin/zsh
+# check if gnome-overview-conf, which is needed to change icon size and layout, is present
+if ! command -v gnome-overview-conf &> /dev/null
+then
+    echo "gnome-oveview-conf could not be found"
+    exit
+fi
+
 echo Please provide the name of the app or apps, separated by spaces, you want to show when external display is connected:
-read -a '' apps
+read -ra '' apps
 for i in $apps
 do
 declare -a applist
@@ -32,17 +40,21 @@ for j in $applist
 do
 mkdir -p ~./local/share/applications/additional
 mv $j ~./local/share/applications/additional # move the shortucuts that'd be displayed only with higher res to a temp. dir
+done
+echo "Please provide icon size for laptop:"
+read licon
+echo "Please provide icon size for when external display is connected:"
+read hdicon
 
 hdmi_active=$(xrandr |grep ' connected' |grep 'HDMI' |awk '{print $1}')
-
-if [[! -z "$hdmi_active" ]] || [[ ! -f ~/.local/share/applications/disabled/*]];
+if [ ! -z "$hdmi_active" ] || ! $find ~/.local/share/applications/disabled/*;
 then
 mv ~/.local/share/applications/additional/* ~/.local/share/aplications/disabed/ 
-gsettings (set icon size etc.) #need to remove pseudocode here
+gnome-overview-conf icon_size "$licon"
 killall -3 gnome-shell # hide the extra shortcuts and restart the DE
-elif [-f  ~/.local/share/applications/additional/*]; # this condition check probably isn't necessary as any potential duplicate shortcuts won't be allowed to be created
+elif $find ~/.local/share/applications/additional/*; # this condition check probably isn't necessary as any potential duplicate shortcuts won't be allowed to be created
 then
 mv ~/.local/share/applications/disabled/* ~/.local/share/applications/
-gsettings (set icon size etc.)
+gnome-overview-conf icon_size "$hdicon" 
 killall -3 gnome-shell
 fi
